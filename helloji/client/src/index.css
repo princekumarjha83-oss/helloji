@@ -1,12 +1,12 @@
+/* Import glassmorphism styles */
+@import './styles/glassmorphism.css';
+
 /* eslint-disable-next-line at-rule-no-unknown */
 @tailwind base;
 /* eslint-disable-next-line at-rule-no-unknown */
 @tailwind components;
 /* eslint-disable-next-line at-rule-no-unknown */
 @tailwind utilities;
-
-/* Import glassmorphism styles */
-@import './styles/glassmorphism.css';
 
 body {
   margin: 0;

@@ -27,6 +27,10 @@ const Tracking = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault()
+    await fetchShipmentData()
+  }
+
+  const fetchShipmentData = async () => {
     if (!trackingId.trim()) {
       setError('Please enter a tracking ID')
       return
@@ -34,7 +38,6 @@ const Tracking = () => {
 
     setLoading(true)
     setError('')
-    setShipment(null)
 
     try {
       // Mock API call - get from localStorage
@@ -56,9 +59,16 @@ const Tracking = () => {
         setSearched(true)
       } else {
         setError('Shipment not found. Please check the tracking ID and try again.')
+        setShipment(null)
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGetUpdates = () => {
+    if (shipment && shipment.trackingId) {
+      fetchShipmentData()
     }
   }
 
@@ -222,7 +232,7 @@ const Tracking = () => {
                 </div>
                 <div className="flex space-x-3">
                   <PDFInvoice shipment={shipment} />
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleGetUpdates}>
                     Get Updates
                   </Button>
                 </div>

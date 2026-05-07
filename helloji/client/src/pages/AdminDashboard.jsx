@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { 
   Package, 
   CheckCircle, 
@@ -37,6 +38,13 @@ const AdminDashboard = () => {
   const [sortOrder, setSortOrder] = useState('desc')
   const [selectedShipmentForOTP, setSelectedShipmentForOTP] = useState(null)
   const [showOTPModal, setShowOTPModal] = useState(false)
+  const [showStatusManager, setShowStatusManager] = useState(false)
+  const [deliveryStatuses, setDeliveryStatuses] = useState([
+    { id: 'booked', name: 'Booked', color: 'blue', received: true },
+    { id: 'dispatched', name: 'Dispatched', color: 'yellow', received: true },
+    { id: 'out for delivery', name: 'Out for Delivery', color: 'purple', received: true },
+    { id: 'delivered', name: 'Delivered', color: 'green', received: true }
+  ])
 
   useEffect(() => {
     fetchAllShipments()
@@ -161,6 +169,41 @@ const AdminDashboard = () => {
     setSelectedShipmentForOTP(null)
   }
 
+  const handleStatusToggle = (statusId) => {
+    setDeliveryStatuses(prev => 
+      prev.map(status => 
+        status.id === statusId 
+          ? { ...status, received: !status.received }
+          : status
+      )
+    )
+  }
+
+  const handleStatusNameChange = (statusId, newName) => {
+    setDeliveryStatuses(prev => 
+      prev.map(status => 
+        status.id === statusId 
+          ? { ...status, name: newName }
+          : status
+      )
+    )
+  }
+
+  const handleStatusColorChange = (statusId, newColor) => {
+    setDeliveryStatuses(prev => 
+      prev.map(status => 
+        status.id === statusId 
+          ? { ...status, color: newColor }
+          : status
+      )
+    )
+  }
+
+  const saveStatusSettings = () => {
+    localStorage.setItem('deliveryStatuses', JSON.stringify(deliveryStatuses))
+    alert('Delivery status settings saved successfully!')
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -187,6 +230,14 @@ const AdminDashboard = () => {
           <div className="hidden md:flex items-center space-x-3">
             <Button variant="secondary" size="sm" icon={<RefreshCw className="w-4 h-4" />}>
               Refresh
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              icon={<Edit className="w-4 h-4" />}
+              onClick={() => setShowStatusManager(true)}
+            >
+              Manage Status
             </Button>
             <div className="relative group">
               <Button variant="secondary" size="sm" icon={<Download className="w-4 h-4" />}>
@@ -307,7 +358,7 @@ const AdminDashboard = () => {
               >
                 <option value="all">All Status</option>
                 <option value="booked">Booked</option>
-                <option value="in transit">In Transit</option>
+                <option value="dispatched">Dispatched</option>
                 <option value="out for delivery">Out for Delivery</option>
                 <option value="delivered">Delivered</option>
               </select>
@@ -459,6 +510,108 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Status Manager Modal */}
+      {showStatusManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <Card>
+              <CardHeader className="border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Manage Delivery Status Options
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowStatusManager(false)}
+                  >
+                    ×
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Configure delivery status options and mark which ones are received
+                </p>
+              </CardHeader>
+              <CardBody className="p-6">
+                <div className="space-y-4">
+                  {deliveryStatuses.map((status) => (
+                    <div key={status.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={status.received}
+                            onChange={() => handleStatusToggle(status.id)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <label className="text-sm font-medium text-gray-700">
+                            Status Received
+                          </label>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium bg-${status.color}-100 text-${status.color}-800`}>
+                          {status.name}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Status Name
+                          </label>
+                          <input
+                            type="text"
+                            value={status.name}
+                            onChange={(e) => handleStatusNameChange(status.id, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Color
+                          </label>
+                          <select
+                            value={status.color}
+                            onChange={(e) => handleStatusColorChange(status.id, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="yellow">Yellow</option>
+                            <option value="orange">Orange</option>
+                            <option value="purple">Purple</option>
+                            <option value="red">Red</option>
+                            <option value="gray">Gray</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowStatusManager(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={saveStatusSettings}
+                  >
+                    Save Settings
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
@@ -466,7 +619,7 @@ const AdminDashboard = () => {
 // Status Update Dropdown Component
 const StatusUpdateDropdown = ({ shipment, onUpdate }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const statuses = ['Booked', 'In Transit', 'Out for Delivery', 'Delivered']
+  const statuses = ['Booked', 'Dispatched', 'Out for Delivery', 'Delivered']
   
   return (
     <div className="relative">
